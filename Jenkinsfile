@@ -36,13 +36,19 @@ pipeline{
                 }
             }
         }
-        stage('Deploy to AKS') {
+         stage('Deploy to AKS') {
             steps {
-                sh '''
-                az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-                az aks get-credentials --resource-group myResourceGroup --name myAKSCluster --overwrite-existing
-                helm upgrade --install nodejs-app ./helm-chart --namespace default --create-namespace
-                '''
+                withCredentials([
+                    string(credentialsId: 'azure-client-id', variable: 'AZURE_CLIENT_ID'),
+                    string(credentialsId: 'azure-client-secret', variable: 'AZURE_CLIENT_SECRET'),
+                    string(credentialsId: 'azure-tenant-id', variable: 'AZURE_TENANT_ID')
+                ]) {
+                    sh '''
+                    az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+                    az aks get-credentials --resource-group myResourceGroup --name myAKSCluster --overwrite-existing
+                    helm upgrade --install nodejs-app ./helm-chart --namespace default --create-namespace
+                    '''
+                }
             }
         }
         stage('Completed the Pipeline Successfully') {
