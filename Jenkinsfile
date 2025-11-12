@@ -28,7 +28,7 @@ pipeline{
                 }
             }
         }
-        stage('Completed the Pipeline Successfully') {
+        stage('Completed the Pipeline Successfully and Notify') {
             steps {
                 echo 'Successfully Completed the Pipeline...'
                 
