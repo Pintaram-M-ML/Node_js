@@ -34,22 +34,24 @@ pipeline{
             }
         }
         stage('Deploy to Kubernetes Cluster using Helm') {
-            steps {
-                echo 'Deploying the application to Kubernetes Cluster...'
-                withAzureCredentials(credentialsId: 'jenkins-sp') {
-                    sh '''
-                        az login --service-principal \
-                        -u $AZURE_CLIENT_ID \
-                        -p $AZURE_CLIENT_SECRET \
-                        --tenant $AZURE_TENANT_ID
-
-                        az aks get-credentials --resource-group jenkins-rg --name myAKSCluster --overwrite-existing
-
-                        helm upgrade --install nodejs-app ./helm-chart --namespace default --create-namespace
-                    '''
-                }
-            }
+    steps {
+        echo 'Deploying the application to Kubernetes Cluster...'
+        withCredentials([
+            usernamePassword(
+                credentialsId: 'jenkins-sp', 
+                usernameVariable: 'AZURE_CLIENT_ID', 
+                passwordVariable: 'AZURE_CLIENT_SECRET'
+            ),
+            string(credentialsId: 'azure-tenant-id', variable: 'TENANT_ID')
+        ]) {
+            sh '''
+                az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $TENANT_ID
+                az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME --overwrite-existing
+                helm upgrade --install nodejs-app ./helm-chart --namespace default --create-namespace
+            '''
         }
+    }
+}
 
         stage('Completed the Pipeline Successfully') {
             steps {
