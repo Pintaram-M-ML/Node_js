@@ -34,31 +34,20 @@ pipeline{
             }
         }
         stage('Deploy to Kubernetes Cluster using Helm') {
-    steps {
-        echo 'Deploying the application to Kubernetes Cluster...'
-        withCredentials([
-            usernamePassword(credentialsId: 'azure-sp-credentials', usernameVariable: 'APP_ID', passwordVariable: 'CLIENT_SECRET'),
+            steps {
+                echo 'Deploying the application to Kubernetes Cluster...'
+                withCredentials([
+            usernamePassword(credentialsId: 'jenkins-sp', usernameVariable: 'APP_ID', passwordVariable: 'CLIENT_SECRET'),
             string(credentialsId: 'azure-tenant-id', variable: 'TENANT_ID')
-        ]) {
-            sh '''
-                echo "== Debug Info =="
-                echo "APP_ID: $APP_ID"
-                echo "TENANT_ID: $TENANT_ID"
-                echo "Checking if az is installed..."
-                az --version || echo "Azure CLI not found"
-                
-                echo "Logging into Azure..."
-                az login --service-principal -u "$APP_ID" -p "$CLIENT_SECRET" --tenant "$TENANT_ID"
-
-                echo "Getting AKS credentials..."
-                az aks get-credentials --resource-group jenkins-rg --name myAKSCluster --overwrite-existing
-
-                echo "Deploying with Helm..."
-                helm upgrade --install nodejs-app ./helm-chart
-            '''
-        }
-    }
-}
+        ]){
+                sh '''
+                    az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+                    az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME
+                    helm upgrade --install nodejs-app ./helm-chart 
+                    '''
+            }
+            }
+        }   
 
         stage('Completed the Pipeline Successfully') {
             steps {
