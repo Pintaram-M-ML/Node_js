@@ -5,6 +5,9 @@ pipeline{
         IMAGE_NAME = 'nodejs-app'
         HELM_RELEASE = 'nodejs-app'
         HELM_CHART_PATH = './helm-chart'
+        AZURE_CLIENT_ID = credentials('jenkins-sp')
+        AZURE_CLIENT_SECRET = credentials('jenkins-sp')
+        AZURE_TENANT_ID = credentials('jenkins-sp')
     }
 
     stages {
@@ -33,26 +36,15 @@ pipeline{
                 }
             }
         }
-        stage('Deploy to Kubernetes Cluster using Helm') {
-    steps {
-        echo 'Deploying the application to Kubernetes Cluster...'
-        withCredentials([
-            usernamePassword(
-                credentialsId: 'jenkins-sp', 
-                usernameVariable: 'AZURE_CLIENT_ID', 
-                passwordVariable: 'AZURE_CLIENT_SECRET'
-            ),
-            string(credentialsId: 'azure-tenant-id', variable: 'TENANT_ID')
-        ]) {
-            sh '''
-                az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $TENANT_ID
-                az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME --overwrite-existing
+        stage('Deploy to AKS') {
+            steps {
+                sh '''
+                az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+                az aks get-credentials --resource-group myResourceGroup --name myAKSCluster --overwrite-existing
                 helm upgrade --install nodejs-app ./helm-chart --namespace default --create-namespace
-            '''
+                '''
+            }
         }
-    }
-}
-
         stage('Completed the Pipeline Successfully') {
             steps {
                 echo 'Successfully Completed the Pipeline...'
