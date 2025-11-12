@@ -3,6 +3,8 @@ pipeline{
 
     environment{
         IMAGE_NAME = 'nodejs-app'
+        HELM_RELEASE = 'nodejs-app'
+        HELM_CHART_PATH = './helm-chart'
     }
 
     stages {
@@ -31,6 +33,16 @@ pipeline{
                 }
             }
         }
+        stage('Deploy to Kubernetes Cluster using Helm') {
+            steps {
+                echo 'Deploying the application to Kubernetes Cluster...'
+                sh '''
+                    az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+                    az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME
+                    helm upgrade --install nodejs-app ./helm-chart 
+                    '''
+            }
+        }   
 
         stage('Completed the Pipeline Successfully') {
             steps {
