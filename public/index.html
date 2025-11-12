@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Node.js Users App</title>
+    <style>
+        /* General body styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        h1, h3 {
+            color: #444;
+        }
+
+        /* Input and button styling */
+        input[type="text"], input[type="email"] {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 8px 12px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        /* Table styling */
+        table {
+            border-collapse: collapse;
+            width: 80%;
+            margin-top: 20px;
+            background-color: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #e9f5e9;
+        }
+
+        /* Responsive table */
+        @media screen and (max-width: 600px) {
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+            tr {
+                margin-bottom: 15px;
+            }
+            th {
+                background-color: #4CAF50;
+                color: white;
+                padding: 10px;
+            }
+            td {
+                border: none;
+                padding: 8px;
+                position: relative;
+                padding-left: 50%;
+            }
+            td::before {
+                position: absolute;
+                top: 0;
+                left: 10px;
+                width: 45%;
+                white-space: nowrap;
+                font-weight: bold;
+            }
+            td:nth-of-type(1)::before { content: "ID"; }
+            td:nth-of-type(2)::before { content: "Name"; }
+            td:nth-of-type(3)::before { content: "Email"; }
+            td:nth-of-type(4)::before { content: "Actions"; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Users Management</h1>
+
+    <h3>Add User</h3>
+    <input type="text" id="name" placeholder="Name">
+    <input type="email" id="email" placeholder="Email">
+    <button onclick="addUser()">Add User</button>
+
+    <h3>Users List</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="usersTable"></tbody>
+    </table>
+
+    <script>
+        const apiUrl = '/users';
+
+        async function fetchUsers() {
+            const res = await fetch(apiUrl);
+            const users = await res.json();
+            const tbody = document.getElementById('usersTable');
+            tbody.innerHTML = '';
+            users.forEach(user => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td><input type="text" value="${user.name}" id="name-${user.id}"></td>
+                        <td><input type="email" value="${user.email}" id="email-${user.id}"></td>
+                        <td>
+                            <button onclick="updateUser(${user.id})">Update</button>
+                            <button onclick="deleteUser(${user.id})" style="background-color:#f44336">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function addUser() {
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            if (!name || !email) return alert('Enter name and email');
+            await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email })
+            });
+            document.getElementById('name').value = '';
+            document.getElementById('email').value = '';
+            fetchUsers();
+        }
+
+        async function updateUser(id) {
+            const name = document.getElementById(`name-${id}`).value;
+            const email = document.getElementById(`email-${id}`).value;
+            await fetch(`${apiUrl}/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email })
+            });
+            fetchUsers();
+        }
+
+        async function deleteUser(id) {
+            await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+            fetchUsers();
+        }
+
+        fetchUsers();
+    </script>
+</body>
+</html>
