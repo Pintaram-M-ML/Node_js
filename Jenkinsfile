@@ -36,21 +36,34 @@ pipeline{
                 }
             }
         }
-         stage('Deploy to AKS') {
-            steps {
-                withCredentials([
-                    string(credentialsId: 'azure-client-id', variable: 'AZURE_CLIENT_ID'),
-                    string(credentialsId: 'azure-client-secret', variable: 'AZURE_CLIENT_SECRET'),
-                    string(credentialsId: 'azure-tenant-id', variable: 'AZURE_TENANT_ID')
-                ]) {
-                    sh '''
-                    az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
-                    az aks get-credentials --resource-group myResourceGroup --name myAKSCluster --overwrite-existing
-                    helm upgrade --install nodejs-app ./helm-chart --namespace default --create-namespace
-                    '''
-                }
-            }
+        stage('Deploy to AKS') {
+    steps {
+        echo 'Deploying the application to AKS Cluster...'
+
+        // Use Azure Service Principal credentials
+        withCredentials([azureServicePrincipal(credentialsId: 'jenkins-sp')]) {
+            sh '''
+            # Login to Azure using Service Principal
+            az login --service-principal \
+                -u $AZURE_CLIENT_ID \
+                -p $AZURE_CLIENT_SECRET \
+                --tenant $AZURE_TENANT_ID
+
+            # Set subscription (optional, if SP has multiple subscriptions)
+            az account set --subscription $AZURE_SUBSCRIPTION_ID
+
+            # Get AKS credentials to configure kubectl
+            az aks get-credentials --resource-group myResourceGroup --name myAKSCluster --overwrite-existing
+
+            # Deploy / upgrade your app using Helm
+            helm upgrade --install nodejs-app ./helm-chart \
+                --namespace default \
+                --create-namespace
+            '''
         }
+    }
+}
+
         stage('Completed the Pipeline Successfully') {
             steps {
                 echo 'Successfully Completed the Pipeline...'
