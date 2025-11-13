@@ -8,7 +8,7 @@ pipeline{
         AZURE_CLIENT_ID = credentials('jenkins-sp')
         AZURE_CLIENT_SECRET = credentials('jenkins-sp')
         AZURE_TENANT_ID = credentials('jenkins-sp')
-        TF_DIR = './Terraform'
+       
 
     }
 
@@ -40,7 +40,7 @@ pipeline{
         }
         stage('Terraform Init & Apply (Create AKS)') {
             steps {
-                dir("${TF_DIR}") {
+                dir('Terraform') {
                     sh '''
                         terraform init
                         terraform plan -out=tfplan
