@@ -36,6 +36,18 @@ pipeline{
                 }
             }
         }
+        stage('Terraform Init & Apply (Create AKS)') {
+            steps {
+                dir("${TF_DIR}") {
+                    sh '''
+                        terraform init
+                        terraform plan -out=tfplan
+                        terraform apply -auto-approve tfplan
+                    '''
+                }
+            }
+        }
+        
         stage('Deploy to AKS') {
     steps {
         echo 'Deploying the application to AKS Cluster...'
