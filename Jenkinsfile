@@ -8,6 +8,8 @@ pipeline{
         AZURE_CLIENT_ID = credentials('jenkins-sp')
         AZURE_CLIENT_SECRET = credentials('jenkins-sp')
         AZURE_TENANT_ID = credentials('jenkins-sp')
+        TF_DIR = './Terraform'
+
     }
 
     stages {
