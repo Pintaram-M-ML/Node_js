@@ -23,7 +23,7 @@ variable "resource_group_name" {
     variable "node_count" {
         description = "The number of nodes in the AKS cluster"
         type        = number
-        default     = 1
+        default     = 2
     }
     variable "node_size" {
         description = "The size of the nodes in the AKS cluster"

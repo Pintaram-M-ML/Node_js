@@ -50,33 +50,33 @@ pipeline{
             }
         }
         
-        stage('Deploy to AKS') {
-    steps {
-        echo 'Deploying the application to AKS Cluster...'
+//         stage('Deploy to AKS') {
+//     steps {
+//         echo 'Deploying the application to AKS Cluster...'
 
-        // Use Azure Service Principal credentials
-        withCredentials([azureServicePrincipal(credentialsId: 'jenkins-sp')]) {
-            sh '''
-            # Login to Azure using Service Principal
-            az login --service-principal \
-                -u $AZURE_CLIENT_ID \
-                -p $AZURE_CLIENT_SECRET \
-                --tenant $AZURE_TENANT_ID
+//         // Use Azure Service Principal credentials
+//         withCredentials([azureServicePrincipal(credentialsId: 'jenkins-sp')]) {
+//             sh '''
+//             # Login to Azure using Service Principal
+//             az login --service-principal \
+//                 -u $AZURE_CLIENT_ID \
+//                 -p $AZURE_CLIENT_SECRET \
+//                 --tenant $AZURE_TENANT_ID
 
-            # Set subscription (optional, if SP has multiple subscriptions)
-            az account set --subscription $AZURE_SUBSCRIPTION_ID
+//             # Set subscription (optional, if SP has multiple subscriptions)
+//             az account set --subscription $AZURE_SUBSCRIPTION_ID
 
-            # Get AKS credentials to configure kubectl
-            az aks get-credentials --resource-group jenkins-rg --name myAKSCluster --overwrite-existing
+//             # Get AKS credentials to configure kubectl
+//             az aks get-credentials --resource-group jenkins-rg --name myAKSCluster --overwrite-existing
 
-            # Deploy / upgrade your app using Helm
-            helm upgrade --install nodejs-app ./helm-chart \
-                --namespace default \
-                --create-namespace
-            '''
-        }
-    }
-}
+//             # Deploy / upgrade your app using Helm
+//             helm upgrade --install nodejs-app ./helm-chart \
+//                 --namespace default \
+//                 --create-namespace
+//             '''
+//         }
+//     }
+// }
 
         stage('Completed the Pipeline Successfully') {
             steps {
