@@ -6,7 +6,6 @@ metadata:
     {{- include "helm-chart.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
- spec:
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
