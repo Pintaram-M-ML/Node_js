@@ -10,7 +10,7 @@ resource "azurerm_kubernetes_cluster" "example" {
   temporary_name_for_rotation = "temp1"
   auto_scaling_enabled = true
   min_count            = 1
-  max_count            = 3
+  max_count            = 2
 }
 
 
