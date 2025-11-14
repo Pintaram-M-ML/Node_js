@@ -6,8 +6,8 @@ resource "azurerm_kubernetes_cluster" "example" {
 
  default_node_pool {
   name                = "default"
-  vm_size             = "Standard_DS2_v2"
-
+  vm_size             = var.node_size
+  temporary_name_for_rotation = "temp1"
   auto_scaling_enabled = true
   min_count            = 1
   max_count            = 3
