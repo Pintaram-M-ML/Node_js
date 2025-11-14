@@ -72,8 +72,7 @@ pipeline{
             # Deploy / upgrade your app using Helm
             helm upgrade --install nodejs-app ./helm-chart \
                 --namespace default \
-                --create-namespace \
-                 -f ./helm-chart/values.yaml
+                --create-namespace 
             '''
         }
     }
