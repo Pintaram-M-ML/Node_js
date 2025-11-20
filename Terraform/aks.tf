@@ -10,7 +10,7 @@ resource "azurerm_kubernetes_cluster" "example" {
     auto_scaling_enabled       = true
     min_count                  = 1
     max_count                  = 2
-    vnet_subnet_id             = azurerm_subnet.aks_pod_subnet.id
+    vnet_subnet_id             = azurerm_subnet.aks_node_subnet.id
     temporary_name_for_rotation = "temp1"
   }
 
@@ -20,8 +20,8 @@ resource "azurerm_kubernetes_cluster" "example" {
 
  network_profile {
   network_plugin = "azure"
-  service_cidr   = "10.3.0.0/24"
-  dns_service_ip = "10.3.0.11"
+  service_cidr   = "10.2.0.0/24"
+  dns_service_ip = "10.2.0.11"
 }
 
 
