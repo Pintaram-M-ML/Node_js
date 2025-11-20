@@ -10,7 +10,7 @@ resource "azurerm_kubernetes_cluster" "example" {
     auto_scaling_enabled       = true
     min_count                  = 1
     max_count                  = 2
-    vnet_subnet_id             = azurerm_subnet.aks_subnet.id
+    vnet_subnet_id             = azurerm_subnet.aks_pod_subnet.id
     temporary_name_for_rotation = "temp1"
   }
 
