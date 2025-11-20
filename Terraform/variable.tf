@@ -1,13 +1,13 @@
 variable "resource_group_name" {
   description = "The name of the resource group"
   type        = string
-  default   = "jenkins-rg"
+  default   = "jenkins-rg1"
   }
   
   variable "storage_account_name" {
     description = "The name of storage Account"
     type        = string
-    default     = "jenkingstorage"
+    default     = "jenkingstorage1"
   }
    variable "aks_cluster_name" {
     type = string

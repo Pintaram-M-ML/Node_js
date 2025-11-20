@@ -67,7 +67,7 @@ pipeline{
             az account set --subscription $AZURE_SUBSCRIPTION_ID
 
             # Get AKS credentials to configure kubectl
-            az aks get-credentials --resource-group jenkins-rg --name aks-cluster --overwrite-existing
+            az aks get-credentials --resource-group jenkins-rg1 --name aks-cluster1 --overwrite-existing
 
             # Deploy / upgrade your app using Helm
             helm upgrade --install nodejs-app ./helm-chart \
