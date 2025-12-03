@@ -1,13 +1,21 @@
 resource "azurerm_kubernetes_cluster" "example" {
-  name                = "aks-cluster1"
+  name                = var.aks_cluster_name
   location            = azurerm_resource_group.jenkins_rg.location
   resource_group_name = azurerm_resource_group.jenkins_rg.name
   dns_prefix          = "jenkinsdns"
+  linux_profile {
+    admin_username = "azureuser"
+
+    ssh_key {
+      key_data = file("~/.ssh/id_rsa.pub")
+    }
+  }
+
 
   default_node_pool {
     name                       = "default"
     vm_size                    = var.node_size
-    auto_scaling_enabled       = true
+    auto_scaling_enabled = true
     min_count                  = 1
     max_count                  = 2
     vnet_subnet_id             = azurerm_subnet.aks_node_subnet.id
