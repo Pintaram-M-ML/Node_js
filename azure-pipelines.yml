@@ -1,0 +1,77 @@
+trigger:
+- main
+
+variables:
+  imageName: nodejs-app
+  dockerHubRepo: pintaramml/nodejs-app
+  helmRelease: nodejs-app
+  aksRG: jenkins-rg1
+  aksName: aks-cluster1
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+
+# ---------------- BUILD & PUSH ----------------
+- stage: Build
+  displayName: Build & Push Docker Image
+  jobs:
+  - job: DockerBuild
+    steps:
+    - checkout: self
+
+    - task: Docker@2
+      displayName: Build & Push Image
+      inputs:
+        containerRegistry: dockerhub-connection
+        repository: $(dockerHubRepo)
+        command: buildAndPush
+        dockerfile: Dockerfile
+        tags: |
+          latest
+          $(Build.BuildId)
+
+# ---------------- TERRAFORM ----------------
+- stage: Terraform
+  displayName: Create AKS using Terraform
+  jobs:
+  - job: TerraformApply
+    steps:
+    - checkout: self
+
+    - task: TerraformInstaller@1
+      inputs:
+        terraformVersion: latest
+
+    - script: |
+        cd Terraform
+        terraform init -reconfigure
+        terraform plan -out=tfplan
+        terraform apply -auto-approve tfplan
+      displayName: Terraform Init & Apply
+
+# ---------------- DEPLOY ----------------
+- stage: Deploy
+  displayName: Deploy to AKS using Helm
+  jobs:
+  - job: HelmDeploy
+    steps:
+    - checkout: self
+
+    - task: AzureCLI@2
+      displayName: AKS Login & Helm Deploy
+      inputs:
+        azureSubscription: azure-sp-connection
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          az aks get-credentials \
+            --resource-group $(aksRG) \
+            --name $(aksName) \
+            --overwrite-existing
+
+          helm upgrade --install $(helmRelease) ./helm-chart \
+            --namespace default \
+            --create-namespace \
+            -f ./helm-chart/values.yaml
