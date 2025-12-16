@@ -6,7 +6,7 @@ pool:
 
 variables:
   IMAGE_NAME: nodejs-apppp
-  DOCKERHUB_USERNAME: your_dockerhub_username
+  DOCKERHUB_USERNAME: pintaramm
   HELM_RELEASE: nodejs-app
   HELM_CHART_PATH: helm-chart
 
