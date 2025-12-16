@@ -1,77 +1,61 @@
 trigger:
 - main
 
-variables:
-  imageName: nodejs-app
-  dockerHubRepo: pintaramml/nodejs-app
-  helmRelease: nodejs-app
-  aksRG: jenkins-rg1
-  aksName: aks-cluster1
-
 pool:
-  vmImage: ubuntu-latest
+  name: Default   # WSL self-hosted agent
+
+variables:
+  IMAGE_NAME: nodejs-apppp
+  DOCKERHUB_USERNAME: your_dockerhub_username
+  HELM_RELEASE: nodejs-app
+  HELM_CHART_PATH: helm-chart
 
 stages:
-
-# ---------------- BUILD & PUSH ----------------
 - stage: Build
-  displayName: Build & Push Docker Image
   jobs:
-  - job: DockerBuild
+  - job: BuildImage
     steps:
     - checkout: self
-
-    - task: Docker@2
-      displayName: Build & Push Image
-      inputs:
-        containerRegistry: dockerhub-connection
-        repository: $(dockerHubRepo)
-        command: buildAndPush
-        dockerfile: Dockerfile
-        tags: |
-          latest
-          $(Build.BuildId)
-
-# ---------------- TERRAFORM ----------------
-- stage: Terraform
-  displayName: Create AKS using Terraform
-  jobs:
-  - job: TerraformApply
-    steps:
-    - checkout: self
-
-    - task: TerraformInstaller@1
-      inputs:
-        terraformVersion: latest
 
     - script: |
-        cd Terraform
-        terraform init -reconfigure
-        terraform plan -out=tfplan
-        terraform apply -auto-approve tfplan
-      displayName: Terraform Init & Apply
+        echo "Building Docker image locally"
+        docker build -t $(IMAGE_NAME):latest .
+      displayName: 'Build Docker Image'
 
-# ---------------- DEPLOY ----------------
-- stage: Deploy
-  displayName: Deploy to AKS using Helm
+- stage: Push
+  dependsOn: Build
   jobs:
-  - job: HelmDeploy
+  - job: PushImage
     steps:
-    - checkout: self
-
-    - task: AzureCLI@2
-      displayName: AKS Login & Helm Deploy
+    - task: Docker@2
+      displayName: 'Login to Docker Hub'
       inputs:
-        azureSubscription: azure-sp-connection
-        scriptType: bash
-        scriptLocation: inlineScript
-        inlineScript: |
-          az aks get-credentials \
-            --resource-group $(aksRG) \
-            --name $(aksName) \
-            --overwrite-existing
+        command: login
+        containerRegistry: dockerhub-connection
 
-          helm upgrade --install $(helmRelease) ./helm-chart \
-            --namespace default \
-            --create-namespace \
-            -f ./helm-chart/values.yaml
+    - script: |
+        docker tag $(IMAGE_NAME):latest $(DOCKERHUB_USERNAME)/$(IMAGE_NAME):latest
+        docker push $(DOCKERHUB_USERNAME)/$(IMAGE_NAME):latest
+      displayName: 'Push Docker Image'
+
+- stage: Deploy
+  dependsOn: Push
+  jobs:
+  - job: DeployLocal
+    steps:
+    - script: |
+        echo "Deploying to Minikube"
+
+        # Ensure minikube is running
+        minikube status
+
+        # Set kubectl context explicitly
+        kubectl config use-context minikube
+
+        # Deploy using Helm
+        helm upgrade --install $(HELM_RELEASE) $(HELM_CHART_PATH) \
+          --namespace default \
+          --create-namespace \
+          --set image.repository=$(DOCKERHUB_USERNAME)/$(IMAGE_NAME) \
+          --set image.tag=latest
+      displayName: 'Deploy to Minikube using Helm'
