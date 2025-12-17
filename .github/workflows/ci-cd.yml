@@ -1,0 +1,66 @@
+# .github/workflows/ci-cd.yml
+name: CI-CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  IMAGE_NAME: nodejs-apppp
+  DOCKERHUB_USERNAME: pintaramm
+  HELM_RELEASE: nodejs-appp
+  HELM_CHART_PATH: helm-chart
+
+jobs:
+  build:
+    name: Build Docker Image
+    runs-on: self-hosted   # WSL runner
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          echo "Building Docker image locally"
+          docker build -t $IMAGE_NAME:latest .
+
+  push:
+    name: Push Docker Image
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKERHUB_PASSWORD }}" | \
+          docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Tag & Push Docker image
+        run: |
+          docker tag $IMAGE_NAME:latest $DOCKERHUB_USERNAME/$IMAGE_NAME:latest
+          docker push $DOCKERHUB_USERNAME/$IMAGE_NAME:latest
+
+  deploy:
+    name: Deploy to Minikube using Helm
+    runs-on: self-hosted
+    needs: push
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Verify Minikube
+        run: |
+          echo "Deploying to Minikube"
+          minikube status
+          kubectl config use-context minikube
+
+      - name: Helm Deploy
+        run: |
+          helm upgrade --install $HELM_RELEASE $HELM_CHART_PATH \
+            --namespace default \
+            --create-namespace \
+            --set image.repository=$DOCKERHUB_USERNAME/$IMAGE_NAME \
+            --set image.tag=latest
