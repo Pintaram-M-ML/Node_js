@@ -7,7 +7,7 @@ on:
       - main
 
 env:
-  IMAGE_NAME: nodejs-ap
+  IMAGE_NAME: nodejs-apppp
   DOCKERHUB_USERNAME: pintaramm
   HELM_RELEASE: nodejs-appp
   HELM_CHART_PATH: helm-chart
