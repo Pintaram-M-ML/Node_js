@@ -27,7 +27,7 @@ jobs:
 
   push:
     name: Push Docker Image
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: build
     steps:
       - name: Checkout source
@@ -45,7 +45,7 @@ jobs:
 
   deploy:
     name: Deploy to Minikube using Helm
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: push
     steps:
       - name: Checkout source
